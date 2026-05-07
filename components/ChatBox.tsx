@@ -5,27 +5,63 @@ import { MessageBubble } from "@/components/MessageBubble";
 import { QuestionInput } from "@/components/QuestionInput";
 import type { Message } from "@/types/chat";
 
-const assistantReply: Message = {
+const errorReply: Message = {
   role: "assistant",
-  content: "Ini jawaban contoh dari AI.",
+  content: "Maaf, terjadi kesalahan saat memproses pertanyaan.",
+};
+
+type AskResponse = {
+  answer?: unknown;
+  error?: unknown;
 };
 
 export function ChatBox() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [question, setQuestion] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  function handleSend(questionText: string) {
+  async function handleSend(questionText: string) {
+    if (isLoading) {
+      return;
+    }
+
     const userMessage: Message = {
       role: "user",
       content: questionText,
     };
 
-    setMessages((currentMessages) => [
-      ...currentMessages,
-      userMessage,
-      assistantReply,
-    ]);
+    setMessages((currentMessages) => [...currentMessages, userMessage]);
     setQuestion("");
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/ask", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ question: questionText }),
+      });
+
+      const data = (await response.json()) as AskResponse;
+      const answer = typeof data.answer === "string" ? data.answer : "";
+
+      if (!response.ok || !answer) {
+        throw new Error("Invalid answer response.");
+      }
+
+      setMessages((currentMessages) => [
+        ...currentMessages,
+        {
+          role: "assistant",
+          content: answer,
+        },
+      ]);
+    } catch {
+      setMessages((currentMessages) => [...currentMessages, errorReply]);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -53,9 +89,14 @@ export function ChatBox() {
             Belum ada pesan.
           </div>
         )}
+
+        {isLoading ? (
+          <div className="text-sm text-zinc-500">AI sedang menjawab...</div>
+        ) : null}
       </div>
 
       <QuestionInput
+        isLoading={isLoading}
         onChange={setQuestion}
         onSubmit={handleSend}
         value={question}

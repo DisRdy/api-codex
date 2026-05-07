@@ -1,12 +1,14 @@
 import type { FormEvent } from "react";
 
 type QuestionInputProps = {
+  isLoading: boolean;
   value: string;
   onChange: (value: string) => void;
   onSubmit: (question: string) => void;
 };
 
 export function QuestionInput({
+  isLoading,
   value,
   onChange,
   onSubmit,
@@ -16,7 +18,7 @@ export function QuestionInput({
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!trimmedValue) {
+    if (!trimmedValue || isLoading) {
       return;
     }
 
@@ -38,10 +40,10 @@ export function QuestionInput({
       />
       <button
         className="min-h-12 rounded-lg bg-emerald-600 px-5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-500"
-        disabled={!trimmedValue}
+        disabled={!trimmedValue || isLoading}
         type="submit"
       >
-        Kirim
+        {isLoading ? "Mengirim..." : "Kirim"}
       </button>
     </form>
   );
