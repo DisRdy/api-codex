@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MessageBubble } from "@/components/MessageBubble";
 import { QuestionInput } from "@/components/QuestionInput";
 import type { Message } from "@/types/chat";
@@ -19,15 +19,25 @@ export function ChatBox() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [question, setQuestion] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "end",
+    });
+  }, [messages, isLoading]);
 
   async function handleSend(questionText: string) {
-    if (isLoading) {
+    const trimmedQuestion = questionText.trim();
+
+    if (!trimmedQuestion || isLoading) {
       return;
     }
 
     const userMessage: Message = {
       role: "user",
-      content: questionText,
+      content: trimmedQuestion,
     };
 
     setMessages((currentMessages) => [...currentMessages, userMessage]);
@@ -40,7 +50,7 @@ export function ChatBox() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ question: questionText }),
+        body: JSON.stringify({ question: trimmedQuestion }),
       });
 
       const data = (await response.json()) as AskResponse;
@@ -78,7 +88,7 @@ export function ChatBox() {
 
       <div
         aria-label="Daftar pesan"
-        className="flex min-h-[360px] flex-col gap-3 bg-zinc-50 p-4"
+        className="flex max-h-[60vh] min-h-[320px] flex-col gap-3 overflow-y-auto bg-zinc-50 p-4 sm:min-h-[420px]"
       >
         {messages.length > 0 ? (
           messages.map((message, index) => (
@@ -93,6 +103,8 @@ export function ChatBox() {
         {isLoading ? (
           <div className="text-sm text-zinc-500">AI sedang menjawab...</div>
         ) : null}
+
+        <div ref={messagesEndRef} />
       </div>
 
       <QuestionInput
