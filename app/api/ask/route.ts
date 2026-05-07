@@ -47,9 +47,17 @@ export async function POST(request: Request) {
       instructions: SYSTEM_INSTRUCTION,
       input: question,
     });
+    const answer = response.output_text.trim();
+
+    if (!answer) {
+      return NextResponse.json(
+        { error: "OpenAI tidak mengembalikan jawaban." },
+        { status: 502 },
+      );
+    }
 
     return NextResponse.json({
-      answer: response.output_text,
+      answer,
     });
   } catch (error) {
     console.error("Gagal memproses pertanyaan dengan OpenAI:", error);

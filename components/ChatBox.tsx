@@ -12,7 +12,6 @@ const errorReply: Message = {
 
 type AskResponse = {
   answer?: unknown;
-  error?: unknown;
 };
 
 export function ChatBox() {
@@ -20,6 +19,7 @@ export function ChatBox() {
   const [question, setQuestion] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isSendingRef = useRef(false);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
@@ -31,9 +31,11 @@ export function ChatBox() {
   async function handleSend(questionText: string) {
     const trimmedQuestion = questionText.trim();
 
-    if (!trimmedQuestion || isLoading) {
+    if (!trimmedQuestion || isLoading || isSendingRef.current) {
       return;
     }
+
+    isSendingRef.current = true;
 
     const userMessage: Message = {
       role: "user",
@@ -70,6 +72,7 @@ export function ChatBox() {
     } catch {
       setMessages((currentMessages) => [...currentMessages, errorReply]);
     } finally {
+      isSendingRef.current = false;
       setIsLoading(false);
     }
   }
