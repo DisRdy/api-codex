@@ -5,6 +5,14 @@ type AskRequestBody = {
   question?: unknown;
 };
 
+const SYSTEM_INSTRUCTION = [
+  "Kamu adalah asisten tanya-jawab yang ramah dan jelas.",
+  "Jawab selalu dalam Bahasa Indonesia.",
+  "Berikan jawaban yang ringkas, jelas, dan mudah dipahami.",
+  "Langsung jawab inti pertanyaan tanpa terlalu panjang.",
+  "Jika pertanyaan pengguna tidak jelas, minta klarifikasi secara singkat.",
+].join(" ");
+
 export async function POST(request: Request) {
   let body: AskRequestBody;
 
@@ -36,6 +44,7 @@ export async function POST(request: Request) {
   try {
     const response = await openai.responses.create({
       model: "gpt-5.5",
+      instructions: SYSTEM_INSTRUCTION,
       input: question,
     });
 
